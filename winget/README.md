@@ -1,114 +1,104 @@
 # Dodanie TZNSECVIRUS do winget
 
-Winget pobiera paczki z **trwałego adresu HTTPS**. Twoja binarka musi więc najpierw
-trafić na GitHub Releases. Poniżej pełna procedura.
+Pakiet jest gotowy do publikacji pod komendą:
+
+```powershell
+winget install tznsecvirus
+```
+
+Identyfikator pakietu to `tznsecvirus.TZNSECVIRUS` — publisher musi być prefiksem,
+żeby skrócona nazwa działała.
 
 ---
 
 ## Krok 1 — wypchnij źródła na GitHub
 
 ```bash
-cd "C:\Users\wojte\Documents\moje projekty\tznsecvirus"
-git init
+cd "C:\Users\wojte\Documents\moje projekty\tnssecvirus"
 git add .
-git commit -m "TZNSECVIRUS 2.0.0"
-git branch -M main
-git remote add origin https://github.com/TWOJ-USER/tznsecvirus.git
-git push -u origin main
+git commit -m "v2.0.0"
+git push
 ```
 
-> **Ważne:** `tznsecvirus.exe`, `target/` i `.gitignore` — sprawdź `.gitignore`,
-> żeby binarka nie poszła do repo (i tak wrzucisz ją jako *asset* release).
+> `tznsecvirus.exe` i `target/` są w `.gitignore` — binarka idzie jako *asset* release,
+> nie do repo.
 
 ---
 
-## Krok 2 — zrób Release z binarką
+## Krok 2 — utwórz Release z binarką (OBOWIĄZKOWE)
 
-Na GitHubie: **Releases → Draft a new release**
+Bez tego kroku walidacja winget-pkgs nie przejdzie — bot musi pobrać `InstallerUrl`.
+
+### Sposób A — GUI (30 sekund, bez tokenu)
+
+GitHub → **Releases → Draft a new release**
 
 - Tag: `v2.0.0`
 - Tytuł: `TZNSECVIRUS 2.0.0`
-- **Attach files**: przeciągnij `tznsecvirus.exe`
+- **Attach files**: przeciągnij `tznsecvirus.exe` (przemianuj przy wgrywaniu na
+  `TZNSECVIRUS.exe` — takiego pliku oczekuje manifest)
+- **Publish release**
 
-Po publikacji adres będzie:
-
-```
-https://github.com/TWOJ-USER/tznsecvirus/releases/download/v2.0.0/tznsecvirus.exe
-```
-
----
-
-## Krok 3 — policz SHA256 nowej binarki
-
-Kiedy zrobisz nowy build, **hash się zmienia** — musisz go zaktualizować:
+### Sposób B — skryptem (wymaga tokenu)
 
 ```powershell
-(Get-FileHash .\tznsecvirus.exe -Algorithm SHA256).Hash
+$env:GITHUB_TOKEN = "ghp_..."   # scopes: contents:write
+.\tools\make_release.ps1
 ```
 
-Wklej do `winget\TZNSECVIRUS.installer.yaml` w obu miejscach
-(`InstallerSha256` i `FileSha256`).
+Skrypt utworzy release, wrzuci asset **i sam zaktualizuje SHA256** w manifeście.
 
 ---
 
-## Krok 4A — szybka ścieżka: `winget create new`
+## Krok 3 — wypchnij zmiany manifestu
 
-Winget sam pobierze binarkę i wygeneruje manifesty:
-
-```powershell
-winget create new --url "https://github.com/TWOJ-USER/tznsecvirus/releases/download/v2.0.0/tznsecvirus.exe" `
-  --version 2.0.0 --name tznsec.TZNSECVIRUS --publisher tznsec `
-  --installer-type portable --architecture x64 `
-  --output-directory .\winget\auto
+```bash
+git add winget tools
+git commit -m "winget: manifest v2.0.0 + skrypt release"
+git push
 ```
 
 ---
 
-## Krok 4B — ręcznie (pliki już masz)
+## Krok 4 — wyślij do winget-pkgs
 
-Edytuj w `winget\`:
-1. `TZNSECVIRUS.yaml` — zamień `TWOJ-USER` na swój nick
-2. `TZNSECVIRUS.installer.yaml` — popraw URL i SHA256
-3. `TZNSECVIRUS.locale.pl-PL.yaml` — jw.
-
-Potem zwaliduj:
-
-```powershell
-winget validate --manifest .\winget\TZNSECVIRUS.yaml --manifest-version 1.6.0
-```
-
----
-
-## Krok 5 — wyślij do winget-pkgs
-
-1. Zrób **fork**: https://github.com/microsoft/winget-pkgs
+1. **Fork**: https://github.com/microsoft/winget-pkgs
 2. W swoim forku utwórz katalog:
-   `manifests/t/tznsec/TZNSECVIRUS/2.0.0/`
-3. Skopiuj tam 3 pliki `.yaml`
-4. Wyślij **Pull Request** do `microsoft/winget-pkgs`
-5. Bot automatycznie zwaliduje; po review pakiet pojawi się w winget.
+   `manifests/t/tznsecvirus/TZNSECVIRUS/2.0.0/`
+3. Skopiuj tam 3 pliki z katalogu `winget/`:
+   - `TZNSECVIRUS.yaml`
+   - `TZNSECVIRUS.installer.yaml`
+   - `TZNSECVIRUS.locale.pl-PL.yaml`
+4. **Pull Request** do `microsoft/winget-pkgs`
 
-Alternatywa bez GitHuba: formularz na https://winget.pkgmgr.dev/packages/submit
+Alternatywa bez forka: formularz na https://winget.pkgmgr.dev/packages/submit
 
 ---
 
-## Sprawdzenie po publikacji
+## Krok 5 — instalacja
+
+Po merge (zwykle 1–7 dni):
 
 ```powershell
-winget search tznsecvirus
-winget show tznsec.TZNSECVIRUS
-winget install tznsec.TZNSECVIRUS
+winget install tznsecvirus
 ```
 
-Po instalacji polecenie `tznsecvirus` jest dostępne w PATH.
+Alias `tznsecvirus` trafia do PATH, więc potem:
+
+```powershell
+tznsecvirus run
+```
+
+Odinstaluowanie: `winget uninstall tznsecvirus`
 
 ---
 
-## Wskazówki
+## Uwagi
 
-- **Nazwa pakietu** to `Publisher.PackageName`, np. `tznsec.TZNSECVIRUS`.
-  Ta sama nazwa już istnieje? Wymyśl inną.
-- **Kolejne wersje**: nowy tag `v2.0.1`, nowy katalog `2.0.1/`, zaktualizowany SHA256.
-- **Autor praw** w metadanych jest obowiązkowy — wpisz np. `tznsec`.
-- Bez licencji w `License:` PR nie przejdzie walidacji.
-- Manifest weryfikują boty winget pobierający binarkę z twojego URL — **plik musi być dostępny publicznie**, najlepiej przez cały czas.
+- **Kolejne wersje**: nowy tag `v2.0.1`, katalog `2.0.1/`, zaktualizowany SHA256.
+- **Bez nowego buildu nie ruszaj hasha.** Każdy nowy `tznsecvirus.exe` ma inne SHA256 —
+  błędny hash = instalacja się nie uda.
+- `winget validate` w CLI nie obsługuje manifestów multi-file (błąd „does not support
+  multi file manifest format”) — to ograniczenie narzędzia. Walidację robi CI winget-pkgs.
+- Autor praw w metadanych jest obowiązkowy, `License: MIT` też.
+- Release musi być **publiczny** — boty nie mają dostępu do prywatnych repo.

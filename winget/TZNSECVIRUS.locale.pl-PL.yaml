@@ -1,7 +1,7 @@
-PackageIdentifier: tznsec.TZNSECVIRUS
+PackageIdentifier: tznsecvirus.TZNSECVIRUS
 PackageVersion: 2.0.0
 PackageLocale: pl-PL
-Publisher: tznsec
+Publisher: tznsecvirus
 PublisherUrl: https://github.com/tznsec/tznsecvirus
 PublisherSupportUrl: https://github.com/tznsec/tznsecvirus/issues
 Author: tznsec
