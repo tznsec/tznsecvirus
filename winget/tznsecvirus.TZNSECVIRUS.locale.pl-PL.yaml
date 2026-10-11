@@ -1,19 +1,17 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.12.0.schema.json
+
 PackageIdentifier: tznsecvirus.TZNSECVIRUS
 PackageVersion: 2.0.0
-DefaultLocale: pl-PL
-ManifestType: installer
-ManifestVersion: 1.6.0
-ProductCode: TZNSECVIRUS
+PackageLocale: pl-PL
 Publisher: tznsecvirus
 PublisherUrl: https://github.com/tznsec/tznsecvirus
 PublisherSupportUrl: https://github.com/tznsec/tznsecvirus/issues
-Author: tznsec
 PackageName: TZNSECVIRUS
 PackageUrl: https://github.com/tznsec/tznsecvirus
 License: MIT
+LicenseUrl: https://github.com/tznsec/tznsecvirus/blob/main/LICENSE
 Copyright: Copyright (c) 2026 tznsec
 ShortDescription: Skaner bezpieczenstwa komputera z analiza AI
-ReleaseDate: 2026-10-11
 Description: |-
   TZNSECVIRUS to aplikacja desktopowa (Rust + WebView) do pelnego skanowania
   bezpieczenstwa komputera z analiza AI.
@@ -34,3 +32,14 @@ Description: |-
   czyszczenie danych przy kazdym uruchomieniu.
 
   Dostawcy AI: darmowe API bez klucza, xkiro.com lub lokalna Ollama.
+Moniker: tznsecvirus
+ReleaseNotes: |-
+  Wersja 2.0.0
+  - pelne skanowanie jednym przyciskiem (system, VPN, pliki, AI)
+  - skaner dowolnej sciezki z ocena AI plikow
+  - chat z asystentem AI znajacym stan komputera
+  - trzech dostawcow AI (darmowe API bez klucza, xkiro, lokalna Ollama)
+  - automatyczny fallback modelu i klucza przy wyczerpanym limicie
+  - ikona aplikacji na pasku zadan
+ManifestType: defaultLocale
+ManifestVersion: 1.12.0
