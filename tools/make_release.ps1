@@ -58,33 +58,32 @@ try {
   }
 }
 
-# --- 2. Asset ---
+# --- 2. Asset (binarnie + parametr ?name=, wymagany przez API) ---
 $uploadUrl = $rel.upload_url -replace '\{.*\}$',''
-$assetPath = Join-Path $env:TEMP $AssetName
-Copy-Item -LiteralPath $ExePath -Destination $assetPath -Force
+$uploadUrl = "$uploadUrl?name=$AssetName"
+$bytes = [System.IO.File]::ReadAllBytes($ExePath)
 
-$boundary = "----tznsec$([guid]::NewGuid().ToString('N'))"
-$bytes = [System.IO.File]::ReadAllBytes($assetPath)
-$header = "--$boundary`r`nContent-Disposition: form-data; name=`"asset`"; filename=`"$AssetName`"`r`nContent-Type: application/octet-stream`r`n`r`n"
-$footer = "`r`n--$boundary--`r`n"
+Add-Type -AssemblyName System.Net.Http
+$client = New-Object System.Net.Http.HttpClient
+$client.DefaultRequestHeaders.Authorization =
+  New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $env:GITHUB_TOKEN)
+$client.DefaultRequestHeaders.UserAgent.ParseAdd("tznsec-release")
+$client.Timeout = [TimeSpan]::FromMinutes(10)
 
-$ms = New-Object System.IO.MemoryStream
-$enc = [System.Text.Encoding]::ASCII
-$ms.Write($enc.GetBytes($header), 0, $header.Length)
-$ms.Write($bytes, 0, $bytes.Length)
-$ms.Write($enc.GetBytes($footer), 0, $footer.Length)
-$bodyBytes = $ms.ToArray()
-$ms.Dispose()
+$body = New-Object System.Net.Http.ByteArrayContent -ArgumentList (,$bytes)
+$body.Headers.ContentType =
+  [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse("application/octet-stream")
 
-try {
-  Invoke-RestMethod -Uri "$uploadUrl?name=$AssetName" -Method Post `
-    -Headers @{ Authorization = "Bearer $env:GITHUB_TOKEN"; "User-Agent" = "tznsec" } `
-    -ContentType "multipart/form-data; boundary=$boundary" -Body $bodyBytes | Out-Null
-  Write-Host "Asset przeslany: $AssetName" -ForegroundColor Green
-} catch {
-  Write-Host "Blad wysylania assetu: $($_.Exception.Message)" -ForegroundColor Red
+$resp = $client.PostAsync($uploadUrl, $body).Result
+$status = [int]$resp.StatusCode
+$client.Dispose()
+
+if ($status -lt 200 -or $status -ge 300) {
+  Write-Host "Blad wysylania assetu: HTTP $status" -ForegroundColor Red
+  Write-Host $resp.Content.ReadAsStringAsync().Result
   exit 1
 }
+Write-Host "Asset przeslany: $AssetName" -ForegroundColor Green
 
 $url = "https://github.com/$Repo/releases/download/$Tag/$AssetName"
 Write-Host ""

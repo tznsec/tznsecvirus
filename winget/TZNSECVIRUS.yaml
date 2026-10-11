@@ -13,6 +13,7 @@ PackageUrl: https://github.com/tznsec/tznsecvirus
 License: MIT
 Copyright: Copyright (c) 2026 tznsec
 ShortDescription: Skaner bezpieczenstwa komputera z analiza AI
+ReleaseDate: 2026-10-11
 Description: |-
   TZNSECVIRUS to aplikacja desktopowa (Rust + WebView) do pelnego skanowania
   bezpieczenstwa komputera z analiza AI.
