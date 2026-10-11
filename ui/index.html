@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TZNSECVIRUS</title>
+<style>
+  :root{
+    --bg:#05070c; --line:#1c2e46; --txt:#c6d6e8; --dim:#63788f;
+    --acc:#00ff9c; --acc2:#35c8ff; --danger:#ff4166; --warn:#ffb020; --ok:#2ee6a0;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:
+      radial-gradient(1000px 650px at 18% -5%, rgba(0,255,156,.06), transparent 62%),
+      radial-gradient(900px 650px at 100% 105%, rgba(53,200,255,.06), transparent 62%),
+      var(--bg);
+    color:var(--txt);overflow:hidden;
+    font-family:Consolas,"Cascadia Mono","Segoe UI Mono",monospace;font-size:13px}
+  canvas#bg{position:fixed;inset:0;z-index:0}
+  #splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:#04060a;transition:opacity .5s ease,visibility .5s}
+  #splash.hide{opacity:0;visibility:hidden}
+  canvas#sbg{position:absolute;inset:0}
+
+  /* ---------- LOGO (SVG) ---------- */
+  .logoSvg{display:block;filter:drop-shadow(0 0 10px rgba(0,255,156,.45))}
+  .logoSvg .lc1{fill:#00ff9c}
+  .logoSvg .lc2{fill:#00c47a}
+  .logoSvg .lc3{fill:#35c8ff}
+  .logoSvg .hex{fill:none;stroke:#1f3b57;stroke-width:3}
+  .logoSvg .hex2{fill:none;stroke:rgba(0,255,156,.28);stroke-width:1.5}
+  .logoSvg .pulse{transform-origin:60px 60px;animation:logopulse 3.2s ease-in-out infinite}
+  @keyframes logopulse{0%,100%{opacity:.85}50%{opacity:1}}
+
+  /* ---------- SPLASH ---------- */
+  .slogo{position:relative;font-size:52px;font-weight:800;letter-spacing:9px;color:#eafff8;overflow:hidden;
+    padding:0 14px;margin-top:20px;text-shadow:0 0 20px rgba(0,255,156,.75),0 0 70px rgba(0,255,156,.35);
+    animation:pulse 2s ease-in-out infinite}
+  .slogo span{color:var(--acc)}
+  .slogo::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.9) 50%,transparent 62%);
+    transform:translateX(-130%);mix-blend-mode:screen;pointer-events:none;
+    animation:textshine 2.6s cubic-bezier(.5,0,.3,1) infinite}
+  @keyframes textshine{0%{transform:translateX(-130%)}55%,100%{transform:translateX(130%)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+  .ssub{position:relative;margin-top:8px;letter-spacing:7px;font-size:11px;color:var(--acc2);
+    text-shadow:0 0 10px rgba(53,200,255,.5);animation:subflick 3s ease-in-out infinite}
+  @keyframes subflick{0%,100%{opacity:.85}50%{opacity:.35}}
+  .smsgs{position:relative;margin-top:16px;height:14px;width:340px;font-size:11px;color:var(--dim);letter-spacing:2px}
+  .smsgs span{position:absolute;left:0;top:0;width:100%;text-align:center;opacity:0;animation:msg 2.4s linear forwards}
+  .smsgs span:nth-child(1){animation-delay:0s} .smsgs span:nth-child(2){animation-delay:.4s}
+  .smsgs span:nth-child(3){animation-delay:.8s} .smsgs span:nth-child(4){animation-delay:1.2s}
+  .smsgs span:nth-child(5){animation-delay:1.6s} .smsgs span:nth-child(6){animation-delay:2s}
+  @keyframes msg{0%{opacity:0}6%{opacity:1}14%{opacity:1}20%{opacity:0}100%{opacity:0}}
+  .mark{position:relative;width:52px;height:42px;margin:28px auto 0}
+  .mark .orb{position:absolute;border-radius:50%}
+  .mark .t1{left:16px;top:0;width:20px;height:20px;
+    background:radial-gradient(circle at 32% 28%,#b6ffe4,#00ff9c 58%,#00a86a);
+    box-shadow:0 0 10px rgba(0,255,156,.8);animation:mk1 3.4s cubic-bezier(.65,0,.35,1) infinite}
+  .mark .t2{left:0;top:22px;width:20px;height:20px;
+    background:radial-gradient(circle at 32% 28%,#9dffd8,#00c47a 58%,#068a58);
+    box-shadow:0 0 8px rgba(0,196,122,.7);animation:mk2 3.4s cubic-bezier(.65,0,.35,1) infinite}
+  .mark .t3{left:32px;top:22px;width:20px;height:20px;
+    background:radial-gradient(circle at 32% 28%,#bdeaff,#35c8ff 58%,#1c7fa8);
+    box-shadow:0 0 8px rgba(53,200,255,.7);animation:mk3 3.4s cubic-bezier(.65,0,.35,1) infinite}
+  .mark .burst{position:absolute;left:50%;top:21px;width:64px;height:64px;margin:-32px 0 0 -32px;
+    border-radius:50%;pointer-events:none;opacity:0;animation:burst 3.4s ease-out infinite;
+    background:radial-gradient(circle,rgba(0,255,156,.75) 0%,rgba(0,255,156,.18) 45%,transparent 70%)}
+  @keyframes mk1{0%{transform:translate(-12px,-18px) rotate(-200deg) scale(.2);opacity:0}14%{opacity:1}
+    34%{transform:none;opacity:1}54%{transform:none;opacity:1}
+    76%{transform:translate(-26px,-23px) rotate(-320deg) scale(.15);opacity:0}
+    100%{transform:translate(-12px,-18px) rotate(-200deg) scale(.2);opacity:0}}
+  @keyframes mk2{0%{transform:translate(-16px,12px) rotate(200deg) scale(.2);opacity:0}14%{opacity:1}
+    34%{transform:none;opacity:1}54%{transform:none;opacity:1}
+    76%{transform:translate(-37px,23px) rotate(330deg) scale(.15);opacity:0}
+    100%{transform:translate(-16px,12px) rotate(200deg) scale(.2);opacity:0}}
+  @keyframes mk3{0%{transform:translate(16px,12px) rotate(-200deg) scale(.2);opacity:0}14%{opacity:1}
+    34%{transform:none;opacity:1}54%{transform:none;opacity:1}
+    76%{transform:translate(37px,23px) rotate(-330deg) scale(.15);opacity:0}
+    100%{transform:translate(16px,12px) rotate(-200deg) scale(.2);opacity:0}}
+  @keyframes burst{0%,54%{opacity:0;transform:scale(.25)}63%{opacity:.95;transform:scale(1)}
+    80%,100%{opacity:0;transform:scale(1.35)}}
+  .sbar{position:relative;margin-top:28px;width:280px;height:2px;background:#0d1626;border-radius:4px;overflow:hidden}
+  .sbar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));
+    box-shadow:0 0 12px var(--acc);animation:fillbar 2.4s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes fillbar{from{width:0}to{width:100%}}
+  .smade{position:absolute;bottom:34px;font-size:11px;letter-spacing:5px;color:#4a5f76;text-transform:uppercase;
+    animation:madeblink 2.4s ease-in-out infinite}
+  .smade b{color:var(--acc);font-weight:700;text-shadow:0 0 12px rgba(0,255,156,.6)}
+  @keyframes madeblink{0%,100%{opacity:.5}50%{opacity:1}}
+
+  /* ---------- APP ---------- */
+  #app{position:relative;z-index:1;height:100%;overflow-y:auto;opacity:0;transition:opacity .5s}
+  #app.show{opacity:1}
+  .wrap{max-width:920px;margin:0 auto;padding:26px 24px 70px}
+  .topbar{display:flex;align-items:center;gap:14px;margin-bottom:26px;position:relative}
+  .wordmark{font-size:26px;font-weight:800;letter-spacing:5px;color:#eafff8;
+    text-shadow:0 0 14px rgba(0,255,156,.4);line-height:1.15}
+  .wordmark span{color:var(--acc);text-shadow:0 0 14px var(--acc)}
+  .sub{font-size:9.5px;letter-spacing:2.6px;color:var(--dim);margin-top:2px}
+  .spacer{flex:1}
+  .burger{width:46px;height:42px;padding:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:5px;border-radius:10px}
+  .burger span{display:block;width:20px;height:2px;background:var(--txt);border-radius:2px;transition:.2s}
+  .burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .burger.open span:nth-child(2){opacity:0}
+  .burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+  .menu{position:absolute;right:0;top:52px;width:288px;background:rgba(9,14,24,.98);
+    border:1px solid var(--line);border-radius:13px;padding:7px;z-index:40;
+    box-shadow:0 18px 50px rgba(0,0,0,.65);display:none}
+  .menu.open{display:block;animation:pop .16s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+  .menu button{display:block;width:100%;text-align:left;padding:11px 13px;background:transparent;
+    border:none;border-radius:9px;color:var(--txt)}
+  .menu button:hover{background:rgba(0,255,156,.09);color:#eaffff}
+  .menu button.active{background:rgba(0,255,156,.13);color:var(--acc);box-shadow:inset 2px 0 0 var(--acc)}
+  .menu button b{display:block;font-size:12px;letter-spacing:2px}
+  .menu button small{display:block;color:var(--dim);font-size:10.5px;margin-top:2px;letter-spacing:0}
+
+  .box{background:rgba(10,16,26,.94);border:1px solid var(--line);border-radius:14px;margin-bottom:18px}
+  .box>h3{margin:0;padding:13px 17px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--acc2);
+    border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px}
+  .box>h3 .badge{margin-left:auto;letter-spacing:0;text-transform:none;color:var(--dim);font-size:11px;font-weight:400}
+  .bd{padding:15px 17px}
+  button{font-family:inherit;font-size:11.5px;cursor:pointer;color:var(--txt);
+    background:linear-gradient(180deg,#132134,#0b1523);border:1px solid var(--line);border-radius:8px;
+    padding:7px 13px;transition:.15s}
+  button:hover{border-color:var(--acc2);color:#eaffff}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.small{padding:6px 10px;font-size:11px}
+  button.primary{border-color:rgba(0,255,156,.6);background:linear-gradient(180deg,#0e4636,#08221c);
+    color:#d8fff2;font-weight:700}
+  input[type=text],input[type=password]{font-family:inherit;font-size:12px;width:100%;background:#070b12;
+    color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+  input[type=text]:focus,input[type=password]:focus{outline:none;border-color:var(--acc2)}
+  .pathrow{display:flex;gap:7px;margin-bottom:9px}
+  .pathrow input{flex:1;min-width:0}
+  .presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .mtools{display:flex;gap:7px;margin-bottom:11px}
+  .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:7px;max-height:280px;
+    overflow:auto;padding:8px;border-radius:10px;background:#070b12;border:1px solid var(--line)}
+  .mgrid label{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:11.5px;
+    border:1px solid var(--line);border-radius:9px;background:#0b1220;cursor:pointer;transition:.12s}
+  .mgrid label:hover{border-color:var(--acc2)}
+  .mgrid label.sel{border-color:rgba(0,255,156,.5);background:rgba(0,255,156,.07)}
+  .mgrid input{accent-color:var(--acc)}
+  .mgrid .mn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .scanwrap{text-align:center;margin:40px 0 24px}
+  .scanbtn{font-size:26px;font-weight:800;letter-spacing:8px;padding:24px 78px;border-radius:14px;
+    color:#03150f;border:1px solid #8bffe0;position:relative;overflow:hidden;
+    background:linear-gradient(180deg,#00ff9c,#00c47a);box-shadow:0 0 34px rgba(0,255,156,.5),0 0 90px rgba(0,255,156,.22);
+    text-shadow:0 1px 0 rgba(255,255,255,.35)}
+  .scanbtn::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(120deg,transparent 20%,rgba(255,255,255,.5) 50%,transparent 80%);
+    transform:translateX(-130%);animation:shine 2.8s ease-in-out infinite}
+  @keyframes shine{0%,62%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+  .scanbtn:hover{filter:brightness(1.1);box-shadow:0 0 50px rgba(0,255,156,.7),0 0 120px rgba(0,255,156,.3)}
+  .scanbtn.busy{background:linear-gradient(180deg,#232e47,#161f31);color:#8698b0;border-color:var(--line);box-shadow:none}
+  .scanbtn.busy::after{display:none}
+  .statusline{text-align:center;font-size:11.5px;color:var(--dim);min-height:17px;margin-bottom:10px}
+  .statusline b{color:var(--acc2)}
+  .progress{height:3px;background:#0b1220;border-radius:4px;overflow:hidden;max-width:520px;margin:0 auto 8px}
+  .progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));
+    box-shadow:0 0 12px var(--acc);transition:width .3s}
+
+  .verdict{text-align:center;padding:30px 20px;border-radius:15px;border:1px solid var(--line);
+    background:rgba(7,12,20,.85);margin-bottom:18px;user-select:none;-webkit-user-select:none}
+  .verdict .n{font-size:76px;font-weight:800;line-height:1}
+  .verdict .lbl{margin-top:6px;font-size:15px;font-weight:700;letter-spacing:4px}
+  .verdict .meta{margin-top:7px;font-size:11.5px;color:var(--dim)}
+  .v-low{color:var(--ok);text-shadow:0 0 34px rgba(46,230,160,.55)}
+  .v-mid{color:var(--warn);text-shadow:0 0 34px rgba(255,176,32,.55)}
+  .v-high{color:var(--danger);text-shadow:0 0 34px rgba(255,65,102,.55)}
+  .todo{list-style:none;margin:0;padding:0}
+  .todo li{display:grid;grid-template-columns:18px 1fr;gap:10px;padding:9px 2px;
+    border-bottom:1px solid rgba(28,46,70,.5);line-height:1.5}
+  .todo li:last-child{border-bottom:none}
+  .todo .ic{text-align:center}
+  .todo .tx{color:#d6e5f4}
+  .todo .tx small{display:block;color:var(--dim);margin-top:2px;font-size:11px}
+  .todo li.hi .ic{color:var(--danger)} .todo li.md .ic{color:var(--warn)}
+  .todo li.ai .ic{color:var(--acc2)} .todo li.ok .ic{color:var(--ok)}
+  .kv{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid rgba(28,46,70,.4);align-items:baseline}
+  .kv:last-child{border-bottom:none}
+  .kv .k{color:var(--dim);width:175px;flex:0 0 auto}
+  .kv .v{word-break:break-word}
+  .tag{font-size:10px;letter-spacing:1px;padding:2px 7px;border-radius:999px;border:1px solid var(--line)}
+  .t-ok{color:var(--ok);border-color:rgba(46,230,160,.45)}
+  .t-warn{color:var(--warn);border-color:rgba(255,176,32,.45)}
+  .t-fail{color:var(--danger);border-color:rgba(255,65,102,.45)}
+  .t-info{color:var(--dim)}
+  .filters{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .filters button.active{border-color:var(--acc);color:var(--acc)}
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  th,td{text-align:left;padding:6px 7px;border-bottom:1px solid rgba(28,46,70,.5);vertical-align:top}
+  th{color:var(--dim);font-weight:400;font-size:9.5px;letter-spacing:1px;text-transform:uppercase}
+  tr.high td.sev{color:var(--danger);font-weight:700}
+  tr.medium td.sev{color:var(--warn);font-weight:700}
+  tr.low td.sev{color:var(--acc2)}
+  td.path{color:#d6e5f4;word-break:break-all}
+  .why{color:var(--dim);font-size:10.5px;margin-top:2px}
+  .dirs{columns:2;font-size:11.5px;color:var(--dim);line-height:1.8}
+  .acard{border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:9px;background:rgba(7,12,20,.6)}
+  .acard .hd{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+  .acard .m{font-weight:700;color:#dceaf8;word-break:break-all}
+  .risk{margin-left:auto;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid var(--line);font-size:10.5px}
+  .r-low{color:var(--ok);border-color:rgba(46,230,160,.5)}
+  .r-mid{color:var(--warn);border-color:rgba(255,176,32,.5)}
+  .r-high{color:var(--danger);border-color:rgba(255,65,102,.5)}
+  .r-na{color:var(--dim)}
+  .acard p{margin:3px 0;color:var(--dim);line-height:1.5}
+  .acard .vd{color:#eafff8} .acard .rc{color:var(--acc)}
+  .spin{display:inline-block;width:10px;height:10px;border:2px solid rgba(53,200,255,.3);
+    border-top-color:var(--acc2);border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  details>summary{cursor:pointer;padding:13px 17px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--acc2);list-style:none;display:flex;align-items:center}
+  details>summary .badge{margin-left:auto;letter-spacing:0;text-transform:none;color:var(--dim);font-size:11px}
+  details[open]>summary{border-bottom:1px solid var(--line)}
+
+  /* chat */
+  .chatbox{display:flex;flex-direction:column;height:60vh;min-height:380px}
+  .chatlog{flex:1 1 auto;overflow-y:auto;padding:15px 17px;display:flex;flex-direction:column;gap:11px}
+  .msg{max-width:82%;padding:10px 13px;border-radius:12px;font-size:12.5px;line-height:1.55;white-space:pre-wrap;
+    word-break:break-word}
+  .msg.u{align-self:flex-end;background:linear-gradient(180deg,#0e4636,#08221c);
+    border:1px solid rgba(0,255,156,.35);color:#d8fff2}
+  .msg.a{align-self:flex-start;background:#0b1220;border:1px solid var(--line);color:var(--txt)}
+  .msg.err{align-self:flex-start;background:#1c0d13;border:1px solid rgba(255,65,102,.45);color:#ffb9c6}
+  .msg .who{font-size:9.5px;letter-spacing:1.5px;color:var(--dim);margin-bottom:4px;text-transform:uppercase}
+  .chatin{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line);background:#070b12}
+  .chatin input{flex:1}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 12px;background:#070b12;align-items:center}
+  .keylist{margin-top:11px;display:flex;flex-direction:column;gap:6px}
+  .keyrow{display:flex;align-items:center;gap:9px;padding:8px 11px;border:1px solid var(--line);
+    border-radius:9px;background:#070b12;cursor:pointer;transition:.12s}
+  .keyrow:hover{border-color:var(--acc2)}
+  .keyrow.act{border-color:rgba(0,255,156,.5);background:rgba(0,255,156,.07)}
+  .keyrow .kdot{width:7px;height:7px;border-radius:50%;background:#2b4256;flex:0 0 auto}
+  .keyrow.act .kdot{background:var(--acc);box-shadow:0 0 9px var(--acc)}
+  .keyrow .km{font-size:12px;color:#d6e5f4;flex:1}
+  .keyrow .ktag{font-size:9.5px;letter-spacing:1px;color:var(--acc);border:1px solid rgba(0,255,156,.4);
+    border-radius:999px;padding:2px 8px}
+  .keyrow .kdel{padding:3px 8px;font-size:11px;color:var(--dim)}
+  .keyrow .kdel:hover{color:var(--danger);border-color:var(--danger)}
+  select{font-family:inherit;font-size:11.5px;background:#0b1220;color:var(--acc);border:1px solid var(--line);
+    border-radius:8px;padding:7px 10px;cursor:pointer;max-width:230px}
+  select:focus{outline:none;border-color:var(--acc2)}
+  .msg b{color:var(--acc2)}
+  .msg code{background:#070b12;border:1px solid var(--line);border-radius:4px;padding:1px 5px;
+    color:#ffd28a;font-size:11.5px}
+  .msg i{color:#b9cde4}
+
+  .foot{text-align:center;font-size:10.5px;color:var(--dim);margin-top:20px}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#1c2e46;border-radius:8px}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div id="splash">
+  <canvas id="sbg"></canvas>
+  <!-- LOGO -->
+  <svg class="logoSvg" width="118" height="118" viewBox="0 0 120 120">
+    <g class="pulse">
+      <path class="hex" d="M60 6 L107 33 V87 L60 114 L13 87 V33 Z"/>
+      <path class="hex2" d="M60 15 L100 38 V82 L60 105 L20 82 V38 Z"/>
+      <circle class="lc1" cx="60" cy="44" r="15"/>
+      <circle class="lc2" cx="44" cy="76" r="13"/>
+      <circle class="lc3" cx="76" cy="76" r="13"/>
+    </g>
+  </svg>
+  <div class="slogo">TZN<span>SEC</span>VIRUS</div>
+  <div class="ssub">DEEP SECURITY SCANNER</div>
+  <div class="smsgs">
+    <span>inicjalizacja rdzenia</span><span>wykrywanie uzadzen</span>
+    <span>analiza obrony systemu</span><span>rejestracja skanera</span>
+    <span>ladowanie modeli AI</span><span>gotowe</span>
+  </div>
+  <div class="mark"><span class="orb t1"></span><span class="orb t2"></span><span class="orb t3"></span><span class="burst"></span></div>
+  <div class="sbar"><i></i></div>
+  <div class="smade">made by <b>tznsec</b></div>
+</div>
+
+<div id="app">
+  <div class="wrap">
+    <div class="topbar">
+      <!-- LOGO -->
+      <svg class="logoSvg" width="46" height="46" viewBox="0 0 120 120">
+        <g class="pulse">
+          <path class="hex" d="M60 6 L107 33 V87 L60 114 L13 87 V33 Z"/>
+          <circle class="lc1" cx="60" cy="44" r="15"/>
+          <circle class="lc2" cx="44" cy="76" r="13"/>
+          <circle class="lc3" cx="76" cy="76" r="13"/>
+        </g>
+      </svg>
+      <div>
+        <div class="wordmark">TZN<span>SEC</span>VIRUS</div>
+        <div class="sub">BEZPIECZENSTWO &middot; VPN &middot; SKANER &middot; AI</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="burger" id="btnMenu"><span></span><span></span><span></span></button>
+      <div class="menu" id="menu">
+        <button data-tab="scan" class="active"><b>SKANUJ</b><small>pelne skanowanie komputera</small></button>
+        <button data-tab="files"><b>SKANOWANIE PLIKOW</b><small>wskaz sciezke i skanuj</small></button>
+        <button data-tab="res"><b>WYNIKI</b><small>werdykt i co sprawdzic</small></button>
+        <button data-tab="chat"><b>CHAT AI</b><small>pomoc z problemami komputera</small></button>
+        <button data-tab="set"><b>USTAWIENIA</b><small>modele AI i konfiguracja</small></button>
+      </div>
+    </div>
+
+    <!-- SKANUJ -->
+    <section id="tab-scan">
+      <div class="scanwrap">
+        <button class="scanbtn" id="btnScan">SKANUJ</button>
+        <div class="statusline" id="status">&nbsp;</div>
+        <div class="progress"><i id="bar"></i></div>
+      </div>
+      <div class="box">
+        <h3>Zakres skanowania <span class="badge" id="scanScope"></span></h3>
+        <div class="bd">
+          <div class="kv"><span class="k">Modele AI</span><span class="v" id="scopeModels">-</span></div>
+          <div class="kv"><span class="k">Co zostanie sprawdzone</span><span class="v">
+            kontrola systemu &middot; VPN &middot; skan katalogow &middot; analiza AI</span></div>
+          <div style="margin-top:12px"><button class="small" id="btnGoSettings">Zmien modele AI</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKANOWANIE PLIKOW -->
+    <section id="tab-files" style="display:none">
+      <div class="box">
+        <h3>Skanuj pliki / folder <span class="badge">mozesz wpisac wlasna sciezke</span></h3>
+        <div class="bd">
+          <div class="pathrow">
+            <input type="text" id="pathInput" placeholder="np. %TEMP%  |  C:\Users\...\Downloads  |  ~\Desktop">
+            <button id="btnPick">Wybierz folder</button>
+          </div>
+          <div class="presets" id="presets">
+            <button class="small" data-p="%TEMP%">%TEMP%</button>
+            <button class="small" data-p="%USERPROFILE%\Downloads">Downloads</button>
+            <button class="small" data-p="%USERPROFILE%\Desktop">Pulpit</button>
+            <button class="small" data-p="%APPDATA%">AppData\Roaming</button>
+            <button class="small" data-p="%LOCALAPPDATA%">AppData\Local</button>
+            <button class="small" data-p="C:\Windows\Temp">C:\Windows\Temp</button>
+            <button class="small" data-p="%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup">Autostart</button>
+          </div>
+          <div class="pathrow" style="margin-bottom:14px">
+            <button id="btnScanFiles" style="flex:1">SKANUJ PLIKI</button>
+            <button id="btnScanFilesAI" class="primary" style="flex:1">SKANUJ + AI</button>
+          </div>
+          <div class="small dim" id="fileInfo">Wpisz sciezke lub wybierz folder. AI oceni kazdy plik czy to wirus.</div>
+        </div>
+      </div>
+
+      <div class="box" id="fileVerdictBox" style="display:none">
+        <h3>Ocena AI <span class="badge" id="fileAiBadge"></span></h3>
+        <div class="bd">
+          <div id="fileVerdict" class="small" style="margin-bottom:12px"></div>
+          <ul class="todo" id="fileTodo"></ul>
+          <div id="fileAiCards"></div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h3>Znalezione pliki <span class="badge" id="fileBadge">brak skanu</span></h3>
+        <div class="bd">
+          <div class="filters" id="filters">
+            <button class="small active" data-f="all">wszystkie</button>
+            <button class="small" data-f="high">wysokie</button>
+            <button class="small" data-f="medium">srednie</button>
+            <button class="small" data-f="low">niskie</button>
+          </div>
+          <div id="fileBody"></div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h3>Skanowane katalogi <span class="badge" id="dirBadge">-</span></h3>
+        <div class="bd"><div class="dirs" id="dirBody">-</div></div>
+      </div>
+    </section>
+
+    <!-- WYNIKI -->
+    <section id="tab-res" style="display:none">
+      <div class="verdict" id="verdict"></div>
+      <div class="box">
+        <h3>Co należy sprawdzić <span class="badge" id="todoCount"></span></h3>
+        <div class="bd"><ul class="todo" id="todo"></ul></div>
+      </div>
+      <div class="box">
+        <h3>Stan systemu <span class="badge" id="secBadge"></span></h3>
+        <div class="bd" id="secBody"></div>
+      </div>
+      <div class="box">
+        <h3>VPN <span class="badge" id="vpnBadge"></span></h3>
+        <div class="bd" id="vpnBody"></div>
+      </div>
+      <details class="box" open>
+        <summary>Analiza modeli AI <span class="badge" id="aiBadge"></span></summary>
+        <div class="bd" id="aiBody"></div>
+      </details>
+    </section>
+
+    <!-- CHAT AI -->
+    <section id="tab-chat" style="display:none">
+      <div class="box chatbox">
+        <h3>Chat z asystentem <span class="badge" id="chatModel">-</span></h3>
+        <div class="chatlog" id="chatLog"></div>
+        <div class="chips" id="chatChips">
+          <select id="chatModelSel" title="Model AI"></select>
+          <button class="small" data-q="Co jest niebezpiecznego w moim systemie?">Co jest niebezpiecznego?</button>
+          <button class="small" data-q="Jak usunac ten plik z Autostartu?">Usunac z Autostartu</button>
+          <button class="small" data-q="Jak wylaczyc RDP na moim komputerze?">Wylaczyc RDP</button>
+          <button class="small" data-q="Czy mam wlaczona ochrone przed wirusami?">Czy mam ochronę?</button>
+        </div>
+        <div class="chatin">
+          <input type="text" id="chatInput" placeholder="Wpisz pytanie o swoj komputer...">
+          <button class="primary" id="btnSend">Wy&#321;lij</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- USTAWIENIA -->
+    <section id="tab-set" style="display:none">
+      <div class="box">
+        <h3>Dostawca AI <span class="badge" id="provBadge">-</span></h3>
+        <div class="bd">
+          <div class="pathrow">
+            <select id="provSel"></select>
+            <button id="btnDetectLocal">Wykryj Ollame</button>
+          </div>
+          <div class="small dim" id="provNote" style="margin-bottom:10px"></div>
+          <div class="pathrow" style="margin-bottom:0">
+            <input type="password" id="apiKey" placeholder="nowy klucz API (dla tego dostawcy)">
+            <button id="btnAddKey">Dodaj</button>
+          </div>
+          <div id="keysList" class="keylist"></div>
+          <div class="small dim" style="margin-top:9px">Kliknij zapisany klucz aby go uzyc. Gdy wyczerpie sie limit, aplikacja sama probuje kolejnych kluczy i modeli.</div>
+          <div style="margin-top:9px"><button class="small" id="btnRefresh">Odswiez liste modeli</button></div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h3>Modele <span class="badge" id="mCount">0 wybranych</span></h3>
+        <div class="bd">
+          <div class="mtools">
+            <button id="btnAll">Zaznacz wszystkie</button>
+            <button id="btnTop">Top 3</button>
+            <button id="btnNone">Odznacz wszystko</button>
+          </div>
+          <div class="mgrid" id="modelGrid"></div>
+          <div class="small dim" style="margin-top:10px">Pierwszy zaznaczony model obsluguje czat AI. Gdy model padnie z limitem, aplikacja uzyje kolejnego automatycznie.</div>
+        </div>
+      </div>
+      <div class="box">
+        <h3>Aplikacja</h3>
+        <div class="bd">
+          <div class="kv"><span class="k">Nazwa</span><span class="v">TZNSECVIRUS 2.0</span></div>
+          <div class="kv"><span class="k">Autor</span><span class="v">tznsec</span></div>
+          <div style="margin-top:12px"><button id="btnExport">Eksport raportu JSON</button></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=(id)=>document.getElementById(id);
+const send=(o)=>window.ipc.postMessage(JSON.stringify(o));
+const esc=(s)=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let running=false,checks=[],report=null,aiCards={},lastAgg=null,lastScore=0,filter="all";
+let aiTarget="res",chatBusy=false;
+
+/* ---------- tlo: siec czastek ---------- */
+function netBg(id,dim){
+  const c=$(id); if(!c) return;
+  const x=c.getContext("2d");
+  let w,h,dpr,pts=[],pulses=[];
+  const ALPHA=dim?0.45:1;
+  function setup(){
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    w=c.width=Math.floor(innerWidth*dpr); h=c.height=Math.floor(innerHeight*dpr);
+    c.style.width=innerWidth+"px"; c.style.height=innerHeight+"px";
+    const n=Math.min(120,Math.max(30,Math.round(innerWidth*innerHeight/15000)));
+    pts=[]; for(let i=0;i<n;i++) pts.push(mk());
+    x.lineWidth=Math.max(1,dpr*0.6);
+  }
+  function mk(){ return { x:Math.random()*w, y:Math.random()*h,
+    vx:(Math.random()-.5)*.30*dpr, vy:(Math.random()-.5)*.30*dpr,
+    r:(Math.random()*1.5+.9)*dpr, ph:Math.random()*6.283 }; }
+  function draw(){
+    x.clearRect(0,0,w,h);
+    const LINK=Math.min(185,Math.max(120,innerWidth*0.13))*dpr;
+    for(let i=0;i<pts.length;i++){
+      const a=pts[i];
+      for(let j=i+1;j<pts.length;j++){
+        const b=pts[j], dx=a.x-b.x, dy=a.y-b.y, d2=dx*dx+dy*dy;
+        if(d2<LINK*LINK){
+          const al=(1-d2/(LINK*LINK))*0.26*ALPHA;
+          x.strokeStyle="rgba(0,255,156,"+al.toFixed(3)+")";
+          x.beginPath(); x.moveTo(a.x,a.y); x.lineTo(b.x,b.y); x.stroke();
+          if(!dim && Math.random()<0.0016) pulses.push({a,b,t:0,speed:0.006+Math.random()*0.010});
+        }
+      }
+    }
+    for(const p of pts){
+      p.ph+=0.018;
+      const tw=0.55+0.45*Math.sin(p.ph);
+      x.fillStyle="rgba(0,255,156,"+(0.55*tw*ALPHA).toFixed(3)+")";
+      x.beginPath(); x.arc(p.x,p.y,p.r,0,6.283); x.fill();
+    }
+    for(let i=pulses.length-1;i>=0;i--){
+      const q=pulses[i]; q.t+=q.speed;
+      if(q.t>=1){ pulses.splice(i,1); continue; }
+      const px=q.a.x+(q.b.x-q.a.x)*q.t, py=q.a.y+(q.b.y-q.a.y)*q.t;
+      x.fillStyle="rgba(53,200,255,.75)";
+      x.beginPath(); x.arc(px,py,1.8*dpr,0,6.283); x.fill();
+    }
+    for(const p of pts){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<-20||p.x>w+20) p.vx*=-1;
+      if(p.y<-20||p.y>h+20) p.vy*=-1;
+    }
+    requestAnimationFrame(draw);
+  }
+  setup(); addEventListener("resize",setup); draw();
+}
+netBg("bg",false);
+
+/* ---------- splash ---------- */
+(function(){
+  netBg("sbg",true);
+  window.__tznHideSplash=function(){const s=$("splash");if(!s)return;
+    s.style.transition="opacity .45s ease";s.style.opacity="0";
+    setTimeout(()=>{s.remove();const b=$("sbg");if(b)b.style.display="none";},500);
+    $("app").classList.add("show");};
+  setTimeout(()=>window.__tznHideSplash(),3500);
+  ["mousedown","keydown","wheel"].forEach(ev=>
+    addEventListener(ev,()=>window.__tznHideSplash(),{once:true,capture:true}));
+})();
+
+/* ---------- menu ---------- */
+function tab(name){
+  document.querySelectorAll(".menu button").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
+  ["scan","files","res","chat","set"].forEach(k=>{
+    const e=$("tab-"+k); if(e) e.style.display=(k===name)?"":"none";
+  });
+}
+function closeMenu(){$("menu").classList.remove("open");$("btnMenu").classList.remove("open");}
+$("btnMenu").addEventListener("click",(ev)=>{if(!ev.isTrusted)return;
+  const o=$("menu").classList.toggle("open");$("btnMenu").classList.toggle("open",o);});
+document.querySelectorAll(".menu button").forEach(b=>{
+  b.addEventListener("click",(ev)=>{if(!ev.isTrusted)return;tab(b.dataset.tab);closeMenu();});
+});
+document.addEventListener("click",(ev)=>{if(!ev.isTrusted)return;
+  if(!$("menu").contains(ev.target)&&ev.target!==$("btnMenu"))closeMenu();});
+$("btnGoSettings").addEventListener("click",(ev)=>{if(!ev.isTrusted)return;tab("set");closeMenu();});
+
+/* ---------- dostawcy AI ---------- */
+let PROVIDERS=[];
+function renderProviders(sel_id,note_id){
+  const s=$("provSel"); if(!s) return;
+  s.innerHTML="";
+  PROVIDERS.forEach(p=>{
+    const o=document.createElement("option");
+    o.value=p.id; o.textContent=p.name+(p.needs_key?" (klucz)":" (bez klucza)");
+    s.appendChild(o);
+  });
+  s.value=sel_id;
+  const p=PROVIDERS.find(x=>x.id===sel_id);
+  if(p&&$(note_id))$(note_id).textContent=p.note+"  ("+p.base_url+")";
+  const b=$("provBadge"); if(b) b.textContent=(p?p.name:sel_id);
+}
+$("provSel").addEventListener("change",(ev)=>{
+  if(!ev.isTrusted)return;
+  send({cmd:"set_provider",provider:$("provSel").value});
+});
+$("btnDetectLocal").onclick=()=>send({cmd:"detect_local"});
+$("btnRefresh").onclick=()=>send({cmd:"refresh_models"});
+$("btnAddKey").addEventListener("click",(ev)=>{
+  if(!ev.isTrusted)return;
+  const k=$("apiKey").value.trim();
+  if(!k)return;
+  send({cmd:"key_add",key:k});
+  $("apiKey").value="";
+});
+function renderKeys(keys){
+  const box=$("keysList"); if(!box)return;
+  box.innerHTML="";
+  keys.forEach(k=>{
+    const row=document.createElement("div");
+    row.className="keyrow"+(k.index===0?" act":"");
+    row.innerHTML='<span class="kdot"></span><span class="km">'+esc(k.masked)+"</span>"+
+      (k.index===0?'<span class="ktag">aktywny</span>':"")+
+      (k.index>0?'<button class="small kdel" data-i="'+k.index+'">&#10005;</button>':"");
+    row.addEventListener("click",(ev)=>{
+      if(!ev.isTrusted)return;
+      if(ev.target.classList.contains("kdel"))return;
+      send({cmd:"key_use",index:k.index});
+    });
+    const del=row.querySelector(".kdel");
+    if(del) del.addEventListener("click",(ev)=>{
+      if(!ev.isTrusted)return; ev.stopPropagation();
+      send({cmd:"key_del",index:k.index});
+    });
+    box.appendChild(row);
+  });
+}
+
+/* ---------- modele ---------- */
+function renderModels(list){
+  const g=$("modelGrid");g.innerHTML="";
+  list.forEach((m,i)=>{
+    const lab=document.createElement("label");
+    lab.innerHTML='<input type="checkbox"><span class="mn" title="'+esc(m)+'">'+esc(m.replace(":free",""))+"</span>";
+    const cb=lab.querySelector("input");
+    cb.checked=i<3;
+    cb.addEventListener("change",()=>{lab.classList.toggle("sel",cb.checked);count();});
+    lab.classList.toggle("sel",cb.checked);
+    g.appendChild(lab);
+  });
+  count();
+}
+function sel(){return Array.from($("modelGrid").querySelectorAll("input")).filter(i=>i.checked)
+  .map(i=>i.closest("label").querySelector(".mn").title);}
+function count(){
+  const s=sel(),e=$("mCount");if(e)e.textContent=s.length+" wybranych";
+  const sc=$("scopeModels");if(sc)sc.textContent=s.length?s.join(", "):"brak - ustaw w USTAWIENIACH";
+  fillChatModels();
+}
+function setAll(n){const cbs=$("modelGrid").querySelectorAll("input");
+  cbs.forEach((c,i)=>{c.checked=i<n;c.closest("label").classList.toggle("sel",c.checked);});count();}
+$("btnAll").onclick=()=>setAll(1e9);
+$("btnTop").onclick=()=>setAll(3);
+$("btnNone").onclick=()=>setAll(0);
+$("btnExport").onclick=()=>send({cmd:"export"});
+
+/* ---------- pliki ---------- */
+$("btnPick").onclick=()=>{$("fileInfo").innerHTML="Wybierz folder...";send({cmd:"pick_folder"});};
+document.querySelectorAll("#presets button").forEach(b=>{
+  b.addEventListener("click",(ev)=>{if(!ev.isTrusted)return;$("pathInput").value=b.dataset.p;});});
+document.querySelectorAll("#filters button").forEach(b=>{
+  b.addEventListener("click",(ev)=>{if(!ev.isTrusted)return;
+    document.querySelectorAll("#filters button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");filter=b.dataset.f;renderRows();});});
+function curPath(){const v=$("pathInput").value.trim();return v||"%TEMP%";}
+$("btnScanFiles").addEventListener("click",(ev)=>{if(!ev.isTrusted)return;
+  aiTarget="files";
+  $("fileInfo").innerHTML="skanuje <b>"+esc(curPath())+"</b>...";
+  send({cmd:"scan_path",path:curPath()});});
+$("btnScanFilesAI").addEventListener("click",(ev)=>{if(!ev.isTrusted)return;
+  aiTarget="files";aiCards={};
+  $("fileAiCards").innerHTML="";$("fileTodo").innerHTML="";$("fileVerdict").innerHTML="";
+  $("fileAiBadge").textContent="analiza...";
+  $("fileInfo").innerHTML="skanuje <b>"+esc(curPath())+"</b> i ocenia z AI...";
+  send({cmd:"scan_path_ai",path:curPath()});});
+
+/* ---------- skan ---------- */
+$("btnScan").addEventListener("click",(ev)=>{
+  if(!ev.isTrusted)return;
+  if(running)return;
+  running=true;checks=[];report=null;aiCards={};lastAgg=null;lastScore=0;aiTarget="res";
+  $("secBody").innerHTML="";$("vpnBody").innerHTML="";$("todo").innerHTML="";
+  $("aiBody").innerHTML="";$("verdict").innerHTML="";
+  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
+  set("secBadge","");set("vpnBadge","");set("aiBadge","");
+  tab("scan");
+  $("btnScan").classList.add("busy");$("btnScan").textContent="SKANUJE";
+  $("bar").style.width="0%";$("status").textContent="startuje...";
+  send({cmd:"models",panel:sel()});
+});
+function st(t){const e=$("status");if(e)e.innerHTML=t;}
+function bar(p){const e=$("bar");if(e)e.style.width=p+"%";}
+
+/* ---------- chat ---------- */
+function fmtChat(t){
+  let s=esc(t);
+  // naglowki markdown
+  s=s.replace(/^#{1,6}\s*(.+)$/gm,"<b>$1</b>");
+  // pogrubienie
+  s=s.replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>");
+  s=s.replace(/__([^_]+)__/g,"<b>$1</b>");
+  // kursywa (po pogrubieniu, zeby nie zlapac **)
+  s=s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g,"$1<i>$2</i>");
+  // kod inline
+  s=s.replace(/`([^`]+)`/g,"<code>$1</code>");
+  // listy
+  s=s.replace(/^[\s]*[-*+]\s+/gm,"&bull; ");
+  s=s.replace(/^[\s]*(\d+)[.)]\s+/gm,"$1. ");
+  return s;
+}
+function addMsg(cls,who,txt){
+  const l=$("chatLog");
+  const d=document.createElement("div");
+  d.className="msg "+cls;
+  d.innerHTML=(who?'<div class="who">'+esc(who)+"</div>":"")+fmtChat(txt);
+  l.appendChild(d); l.scrollTop=l.scrollHeight;
+  return d;
+}
+function fillChatModels(){
+  const s=$("chatModelSel"); if(!s) return;
+  const cur=s.value;
+  const models=sel();
+  s.innerHTML="";
+  models.forEach(m=>{ const o=document.createElement("option"); o.value=m; o.textContent=m.replace(":free",""); s.appendChild(o); });
+  if(models.length && models.indexOf(cur)===-1) s.value=models[0];
+}
+function sendChat(){
+  if(chatBusy)return;
+  const t=$("chatInput").value.trim();
+  if(!t)return;
+  $("chatInput").value="";
+  chatBusy=true;
+  const msel=$("chatModelSel");
+  addMsg("u","ty",t);
+  addMsg("a","asystent","...");
+  send({cmd:"chat",message:t, model: msel?msel.value:undefined});
+}
+$("btnSend").addEventListener("click",(ev)=>{if(!ev.isTrusted)return;sendChat();});
+$("chatInput").addEventListener("keydown",(ev)=>{
+  if(!ev.isTrusted)return;
+  if(ev.key==="Enter")sendChat();
+});
+document.querySelectorAll("#chatChips button").forEach(b=>{
+  b.addEventListener("click",(ev)=>{if(!ev.isTrusted)return;
+    $("chatInput").value=b.dataset.q;sendChat();});});
+
+/* ---------- sekcje ---------- */
+function addCheck(c){
+  checks.push(c);
+  const sb=$("secBadge");if(sb)sb.textContent=checks.length+" kontroli";
+  $("secBody").insertAdjacentHTML("beforeend",
+    '<div class="kv"><span class="k">'+esc(c.name)+'</span><span class="v"><span class="tag t-'+
+    esc(c.status)+'">'+esc(c.status.toUpperCase())+'</span> '+esc(c.detail)+"</span></div>");
+}
+function renderVpn(v,tools,geo){
+  const vb=$("vpnBadge");
+  if(vb)vb.innerHTML=v.active?'<span style="color:var(--ok)">POLACZONY</span>':'<span style="color:var(--dim)">brak tunelu</span>';
+  let h='<div class="kv"><span class="k">Stan</span><span class="v">'+(v.active
+    ?'<span style="color:var(--ok)">aktywny &mdash; '+esc(v.active_name||"tunel")+"</span>"
+    :'<span style="color:var(--dim)">niepolaczony</span>')+"</span></div>";
+  if(geo)h+='<div class="kv"><span class="k">Publiczne IP</span><span class="v">'+esc(geo.ip)+" &middot; "+esc(geo.country)+" &middot; "+esc(geo.isp)+"</span></div>";
+  h+='<div class="kv"><span class="k">Adaptery</span><span class="v">'+(v.adapters.length?v.adapters.map(a=>esc(a.name)+" ["+esc(a.status)+"]").join(", "):"brak")+"</span></div>";
+  h+='<div class="kv"><span class="k">Profile</span><span class="v">'+(v.profiles.length?v.profiles.map(p=>esc(p.name)).join(", "):"brak")+"</span></div>";
+  h+='<div class="kv"><span class="k">Uprawnienia</span><span class="v">'+(v.admin?'<span style="color:var(--ok)">administrator</span>':'<span style="color:var(--warn)">standard</span>')+"</span></div>";
+  $("vpnBody").innerHTML=h;
+}
+function renderFiles(r){
+  report=r;
+  const fb=$("fileBadge");
+  if(fb)fb.textContent=r.scanned_files+" plikow / "+r.high+" wys. / "+r.medium+" sr. / "+r.low+" nisk.";
+  $("fileInfo").innerHTML="Przeskanowano <b>"+r.scanned_files+"</b> plikow w "+r.dirs.length+
+    " katalogach ("+(r.elapsed_ms/1000).toFixed(1)+" s). Wysokich: <span style=\"color:var(--danger)\">"+r.high+
+    "</span>, srednich: <span style=\"color:var(--warn)\">"+r.medium+"</span>, niskich: <span style=\"color:var(--acc2)\">"+r.low+"</span>.";
+  const db=$("dirBadge");if(db)db.textContent=r.dirs.length+" katalogow";
+  $("dirBody").innerHTML=r.dirs.map(d=>esc(d)).join("<br>");
+  renderRows();
+}
+function renderRows(){
+  const t=$("fileBody");if(!t||!report)return;
+  const rows=report.findings.filter(f=>filter==="all"||f.severity===filter);
+  if(!rows.length){t.innerHTML='<div class="small dim">Brak wynikow dla tego filtra.</div>';return;}
+  let h='<table><thead><tr><th>ryzyko</th><th>plik</th><th>rozmiar</th></tr></thead><tbody>';
+  rows.slice(0,200).forEach(f=>{
+    const kb=f.size>1048576?(f.size/1048576).toFixed(1)+" MB":Math.max(1,Math.round(f.size/1024))+" kB";
+    h+='<tr class="'+f.severity+'"><td class="sev">'+f.severity+'</td><td class="path">'+esc(f.path)+
+       '<div class="why">'+esc(f.reasons.join(" &middot; "))+"</div></td><td class=\"small dim\">"+kb+"</td></tr>";
+  });
+  t.innerHTML=h+"</tbody></table>";
+}
+
+/* ---------- werdykt ---------- */
+function renderVerdict(agg,score){
+  lastAgg=agg;lastScore=score;
+  const src=agg&&agg.ok?agg:null;
+  const v=src?Math.round(agg.risk_avg):(score||0);
+  const cl=v<30?"low":v<60?"mid":"high";
+  const tx=v<30?"NISKIE RYZYKO":v<60?"SREDNIE RYZYKO":"WYSOKIE RYZYKO";
+  const meta=src?("konsensus "+agg.ok+"/"+agg.total+" modeli AI (min "+agg.risk_min+" &middot; max "+agg.risk_max+")")
+    :"indeks ryzyka konfiguracji systemu";
+  const html='<div class="n v-'+cl+'">'+v+'</div><div class="lbl v-'+cl+'">'+tx+'</div><div class="meta">'+meta+"</div>";
+  if(aiTarget==="files"){
+    $("fileVerdict").innerHTML=html;
+    $("fileVerdict").style.cssText="text-align:center;padding:18px;border:1px solid var(--line);border-radius:12px;background:rgba(7,12,20,.85);margin-bottom:12px";
+    $("fileVerdict").querySelector(".n").style.fontSize="52px";
+    const ul=$("fileTodo");ul.innerHTML="";
+    if(agg){agg.findings.forEach(f=>{ul.insertAdjacentHTML("beforeend",
+      '<li class="ai"><span class="ic">&#9679;</span><span class="tx">'+esc(f)+"</span></li>");});
+      agg.recommendations.forEach(f=>{ul.insertAdjacentHTML("beforeend",
+        '<li class="ai"><span class="ic">&#9881;</span><span class="tx">'+esc(f)+"</span></li>");});}
+    const ab=$("fileAiBadge");if(ab)ab.textContent=agg?agg.ok+"/"+agg.total+" modeli":"brak";
+  } else {
+    $("verdict").innerHTML=html;
+    renderTodo();
+  }
+}
+function renderTodo(){
+  const ul=$("todo");ul.innerHTML="";let n=0;
+  const add=(ic,txt,sub,cls)=>{n++;
+    ul.insertAdjacentHTML("beforeend",'<li class="'+cls+'"><span class="ic">'+ic+'</span><span class="tx">'+esc(txt)+
+      (sub?'<small>'+esc(sub)+"</small>":"")+"</span></li>");};
+  checks.filter(c=>c.status==="fail").forEach(c=>add("&#9679;",c.name,c.detail,"hi"));
+  checks.filter(c=>c.status==="warn").forEach(c=>add("&#9679;",c.name,c.detail,"md"));
+  if(report&&report.findings.length){
+    const f=report.findings[0];
+    add("&#9679;","Najbardziej podejrzany plik: "+f.file,f.path+" &mdash; "+f.reasons.join(", "),f.severity==="high"?"hi":"md");
+  }
+  if(lastAgg){lastAgg.findings.forEach(f=>add("&#9679;",f,null,"ai"));
+    lastAgg.recommendations.forEach(f=>add("&#9881;",f,null,"ai"));}
+  if(n===0)add("&#10003;","Nie znaleziono problemow wymagajacych uwagi.","Brak krytycznych ustaleń.","ok");
+  const tc=$("todoCount");if(tc)tc.textContent=n+" pozycji";
+}
+
+/* ---------- AI ---------- */
+function aiStart(models){
+  aiCards={};
+  const box=aiTarget==="files"?$("fileAiCards"):$("aiBody");
+  box.innerHTML='<div class="small dim" style="margin-bottom:10px">'+models.length+" modeli analizuje...</div>";
+  models.forEach(m=>{const d=document.createElement("div");d.className="acard";
+    d.innerHTML='<div class="hd"><span class="m">'+esc(m)+'</span><span class="risk r-na">...</span></div><p><span class="spin"></span> analizuje...</p>';
+    box.appendChild(d);aiCards[m]=d;});
+  const ab=aiTarget==="files"?$("fileAiBadge"):$("aiBadge");
+  if(ab)ab.textContent="0/"+models.length;
+}
+function aiModel(r){
+  const d=aiCards[r.model];if(!d)return;
+  const rk=r.ok&&r.risk!=null?r.risk:null,cl=rk==null?"na":rk<30?"low":rk<60?"mid":"high";
+  let h='<div class="hd"><span class="m">'+esc(r.model)+'</span><span class="risk r-'+cl+'">'+
+    (rk==null?(r.ok?"?":"blad"):"ryzyko "+rk+"/100")+"</span></div>";
+  if(!r.ok)h+='<p style="color:var(--danger)">'+esc(r.error)+"</p>";
+  else{
+    if(r.used_model && r.used_model!==r.model)
+      h+='<p class="rc">&#8646; limit wyczerpany - uzyto modelu <b>'+esc(r.used_model)+"</b></p>";
+    if(r.verdict)h+='<p class="vd">'+esc(r.verdict)+"</p>";
+    if(r.summary)h+="<p>"+esc(r.summary)+"</p>";
+    if(r.findings&&r.findings.length)h+="<p>&bull; "+r.findings.slice(0,6).map(esc).join("<br>&bull; ")+"</p>";
+    if(r.recommendation)h+='<p class="rc">&#9881; '+esc(r.recommendation)+"</p>";
+  }
+  d.innerHTML=h;
+}
+
+/* ---------- zdarzenia ---------- */
+window.__tnsEvent=function(e){
+  switch(e.type){
+    case "hide_splash": window.__tznHideSplash(); break;
+    case "path_picked": $("pathInput").value=e.path;$("fileInfo").innerHTML="wybrano: <b>"+esc(e.path)+"</b>"; break;
+    case "ready":
+      PROVIDERS=e.providers||[];
+      renderProviders(e.provider,"provNote");
+      renderModels(e.models||[]);
+      fillChatModels();
+      if(e.keys) renderKeys(e.keys);
+      if(!e.has_key){ st("tryb bez klucza - modele lokalne / darmowe"); }
+      if(e.wiped>0){ st("prywatnosc: usunieto "+e.wiped+" starych raportow"); }
+      break;
+    case "provider_changed":
+      PROVIDERS=e.providers||[];
+      renderProviders(e.provider,"provNote");
+      renderModels(e.models||[]);
+      fillChatModels();
+      if(e.keys) renderKeys(e.keys);
+      st("dostawca: "+e.provider);
+      break;
+    case "keys": renderKeys(e.keys||[]); break;
+    case "phase": st("faza: <b>"+esc(e.label)+"</b>"); bar(5); break;
+    case "check": addCheck(e.check); break;
+    case "security_done":
+      lastScore=e.score;bar(28);
+      if(!lastAgg&&aiTarget!=="files"){renderVerdict(null,e.score);tab("res");}
+      st("kontrole OK");break;
+    case "vpn": renderVpn(e.vpn,e.tools,e.geo); bar(45); break;
+    case "scan_progress": st("skanowanie... <b>"+e.count+"</b> plikow"); bar(45+Math.min(25,e.count/2400)); break;
+    case "scan_done": renderFiles(e.report); bar(72); st("pliki sprawdzone"); break;
+    case "ai_start": aiStart(e.models); bar(78); break;
+    case "ai_model": aiModel(e.result); break;
+    case "ai_done":
+      renderVerdict(e.agg,lastScore); bar(100);
+      if(aiTarget==="files"){ $("fileVerdictBox").style.display=""; }
+      else { tab("res"); $("verdict").scrollIntoView({behavior:"smooth",block:"start"}); }
+      break;
+    case "done": running=false;$("btnScan").classList.remove("busy");$("btnScan").textContent="SKANUJ";st("&nbsp;");break;
+    case "chat_reply": {
+      const l=$("chatLog"), last=l.lastElementChild;
+      if(last && last.textContent==="...") last.remove();
+      addMsg("a","asystent · "+e.model,e.message);
+      chatBusy=false; break;
+    }
+    case "chat_error": {
+      const l=$("chatLog"), last=l.lastElementChild;
+      if(last && last.textContent==="...") last.remove();
+      addMsg("err","blad",e.message); chatBusy=false; break;
+    }
+  }
+};
+window.addEventListener("error",ev=>st('<span style="color:var(--danger)">JS: '+esc(ev.message)+"</span>"));
+addMsg("a","asystent","Czesc! Jestem asystentem TZNSECVIRUS. Znam stan Twojego komputera z ostatniego skanu - pytaj o cokolwiek: zagrozenia, VPN, autostart, podejrzane pliki.");
+send({cmd:"ready"});
+</script>
+</body>
+</html>

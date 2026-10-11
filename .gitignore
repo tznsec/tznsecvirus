@@ -1,0 +1,10 @@
+/target
+**/*.rs.bk
+*.pdb
+
+# binarka — wrzucana jako asset GitHub Release, nie do repo
+tznsecvirus.exe
+/winget/auto
+
+# dane WebView2
+*.WebView2
